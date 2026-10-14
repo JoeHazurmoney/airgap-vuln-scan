@@ -50,7 +50,7 @@ text prints `DB URL:` and `Checksum: sha256:…`, its `-o json` prints `"built"`
 - Age limits: `MAX_DB_AGE_DAYS` (trivy-db, grype-db) and `MAX_JAVA_DB_AGE_DAYS`
   (trivy-java-db), default 7; stale = built more than N × 24 h ago; warnings never fail.
 - `--java-db-refresh-days N`, default 0 = every fetch.
-- Wording: "customer", never anything government-related; tools named generically
+- Wording: customer-neutral (say "customer"); tools named generically
   ("e.g. GitHub, GitLab").
 - Commits: conventional messages, ending `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Pins: actions by SHA; images by digest (values in Task 7).
