@@ -63,6 +63,12 @@ test_warn_adds_an_annotation_on_github_actions() {
   assert_contains "$(lib warn old)" "::warning title=Stale vulnerability database::old"
 }
 
+test_docker_run_gives_containers_a_writable_tmp() {
+  # Grype's image is FROM scratch with a root-owned /tmp, and containers run as the host user.
+  lib docker_run some/image > /dev/null
+  assert_contains "$(cat "$FAKE_DOCKER_LOG")" "--tmpfs /tmp"
+}
+
 test_host_path_gives_an_absolute_path_for_dirs_and_files() {
   mkdir "d d"; touch "d d/f"
   dir=$(lib host_path "d d")
