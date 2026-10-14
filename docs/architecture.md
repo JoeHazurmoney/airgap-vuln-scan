@@ -127,6 +127,11 @@ calling `docker run` from a shell, Grype's plain image has no shell to run the j
 | Each database's age | before every scan | a warning; the scan runs |
 | No network calls | every scan runs with networking disabled | the scan fails instead of reaching out |
 
+`SHA256SUMS` travels with the release, so it catches damage in transit, not a deliberate change by
+someone who can also rewrite `SHA256SUMS`. Guarding against that takes signing, which this example
+leaves out. A lighter step is to send the hash of `SHA256SUMS` itself by a separate channel and
+compare it before importing.
+
 ## When things go wrong
 
 * **The daily pipeline fails** (e.g. a database host is down). There's no new release that day,
