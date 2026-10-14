@@ -70,10 +70,12 @@ host_path() {
 }
 
 # docker_run ARGS...: docker run as the host user, so files written to bind mounts belong to
-# the runner, with a private writable /tmp (Grype's image is FROM scratch and its /tmp belongs
-# to root). MSYS_NO_PATHCONV stops Git Bash rewriting the container-side paths.
+# the runner, with a private writable /tmp: Grype's image is FROM scratch and its /tmp belongs
+# to root, and without an explicit mode Docker copies that mode onto the tmpfs.
+# MSYS_NO_PATHCONV stops Git Bash rewriting the container-side paths.
 docker_run() {
-  MSYS_NO_PATHCONV=1 docker run --rm --user "$(id -u):$(id -g)" --tmpfs /tmp -e HOME=/tmp "$@"
+  MSYS_NO_PATHCONV=1 docker run --rm --user "$(id -u):$(id -g)" --tmpfs /tmp:mode=1777 \
+    -e HOME=/tmp "$@"
 }
 
 # The settings that keep each scanner offline, with its databases mounted at /db. Used by the

@@ -65,8 +65,9 @@ test_warn_adds_an_annotation_on_github_actions() {
 
 test_docker_run_gives_containers_a_writable_tmp() {
   # Grype's image is FROM scratch with a root-owned /tmp, and containers run as the host user.
+  # Without an explicit mode, Docker copies that /tmp's root-only mode onto the tmpfs.
   lib docker_run some/image > /dev/null
-  assert_contains "$(cat "$FAKE_DOCKER_LOG")" "--tmpfs /tmp"
+  assert_contains "$(cat "$FAKE_DOCKER_LOG")" "--tmpfs /tmp:mode=1777"
 }
 
 test_host_path_gives_an_absolute_path_for_dirs_and_files() {
