@@ -7,7 +7,7 @@ behind it are in [ADR-0001](decisions/0001-scanner-images-and-databases.md).
 ```mermaid
 flowchart LR
   subgraph NET["Internet"]
-    IMG["Official images<br/>trivy:latest · grype:debug"]
+    IMG["Official images<br/>trivy:latest · grype:latest"]
     DBS["Vulnerability databases<br/>trivy-db · trivy-java-db · Grype DB"]
   end
   subgraph CON["Connected forge (e.g. GitHub, GitLab)"]
@@ -70,7 +70,7 @@ updated, they run the age check and both scanners against the database directory
 ```
 scanners-2026-10-14/
   images/trivy-0.75.0.tar.gz          the official images, saved
-  images/grype-0.120.1-debug.tar.gz
+  images/grype-0.120.1.tar.gz
   db/trivy-db.tar.gz
   db/trivy-java-db.tar.gz
   db/grype-db.tar.zst
@@ -104,6 +104,10 @@ example, on GitLab, add to the runner's `config.toml`:
 [runners.docker]
   volumes = ["/srv/vulndb:/srv/vulndb:ro"]
 ```
+
+If your forge runs each job inside the scanner image (e.g. GitLab's Docker executor) rather than
+calling `docker run` from a shell, Grype's plain image has no shell to run the job. Set
+`GRYPE_IMAGE_REF=ghcr.io/anchore/grype:debug`: the same release, plus a busybox shell.
 
 **Scan jobs (both forges).**
 

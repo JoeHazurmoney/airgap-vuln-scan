@@ -67,7 +67,7 @@ wd2l.
 ```mermaid
 flowchart LR
   subgraph NET["Internet"]
-    IMG["Official images<br/>trivy:latest · grype:debug"]
+    IMG["Official images<br/>trivy:latest · grype:latest"]
     DBS["Vulnerability databases<br/>trivy-db · trivy-java-db · Grype DB"]
   end
   subgraph CON["Connected forge (e.g. GitHub, GitLab)"]
@@ -105,9 +105,9 @@ runner. In Git Bash, `lib.sh` converts mount paths with `pwd -W`.
 ### `fetch.sh WORK_DIR [--java-db-refresh-days N]` (connected)
 
 1. Pull `$TRIVY_IMAGE_REF` (default `ghcr.io/aquasecurity/trivy:latest`) and `$GRYPE_IMAGE_REF`
-   (default `ghcr.io/anchore/grype:debug`). Record each image's registry digest and version.
+   (default `ghcr.io/anchore/grype:latest`). Record each image's registry digest and version.
    Tag them locally as `airgap-vuln-scan/trivy:<version>` and
-   `airgap-vuln-scan/grype:<version>-debug`.
+   `airgap-vuln-scan/grype:<version>`.
 2. Trivy's database: `trivy image --download-db-only --cache-dir WORK_DIR/trivy`.
 3. Trivy's Java database: `--download-java-db-only`, unless `WORK_DIR/trivy/java-db` exists and
    was built less than N days ago (N > 0). Log which happened.
@@ -124,7 +124,7 @@ Writes `OUT_DIR/scanners-YYYY-MM-DD/` (the UTC date; a re-run on the same day re
 
 ```
 images/trivy-<v>.tar.gz           docker save | gzip
-images/grype-<v>-debug.tar.gz
+images/grype-<v>.tar.gz
 db/trivy-db.tar.gz                tar of WORK_DIR/trivy/db
 db/trivy-java-db.tar.gz           tar of WORK_DIR/trivy/java-db
 db/grype-db.tar.zst               Grype's own archive, unchanged
@@ -143,7 +143,7 @@ TRIVY_SOURCE=ghcr.io/aquasecurity/trivy@sha256:…
 TRIVY_IMAGE=airgap-vuln-scan/trivy:0.75.0
 GRYPE_VERSION=0.120.1
 GRYPE_SOURCE=ghcr.io/anchore/grype@sha256:…
-GRYPE_IMAGE=airgap-vuln-scan/grype:0.120.1-debug
+GRYPE_IMAGE=airgap-vuln-scan/grype:0.120.1
 TRIVY_DB_BUILT=2026-10-14T06:20:16Z
 TRIVY_JAVA_DB_BUILT=2026-10-14T01:11:59Z
 GRYPE_DB_BUILT=2026-10-14T06:35:20Z
@@ -162,7 +162,7 @@ own media-handling rules apply; this repo doesn't model them.
    stops the import before anything is loaded, with the failing file named.
 2. **Load:** `docker load` both image archives.
 3. **Push** (if `--registry` is given): tag and push `PREFIX/trivy:<v>`, `PREFIX/trivy:latest`,
-   `PREFIX/grype:<v>-debug` and `PREFIX/grype:debug`.
+   `PREFIX/grype:<v>` and `PREFIX/grype:latest`.
 4. **Unpack** into `VULNDB_ROOT/incoming/`: `trivy/db`, `trivy/java-db`, and Grype's database
    via `grype db import` (in the Grype image, with no network) into `grype/`. Copy `MANIFEST`
    in: it is the record of what was imported and when each database was built.
@@ -180,7 +180,7 @@ Reads each database's build time from the data itself: `UpdatedAt` in Trivy's tw
 - For each database, prints one line: name, build time, age in days.
 - Past the limit, meaning built more than N × 24 hours ago (N is `MAX_DB_AGE_DAYS` for trivy-db
   and grype-db, `MAX_JAVA_DB_AGE_DAYS` for trivy-java-db; both default to 7), prints
-  `WARNING: trivy-db is 9 days old (built 2026-10-05T06:20:16Z); limit 7 days. Import a newer release.`
+  `WARNING: trivy-db is 9.0 days old (built 2026-10-05T06:20:16Z); limit 7 days. Import a newer release.`
   On GitHub Actions (`GITHUB_ACTIONS=true`) it also prints a `::warning::` annotation.
 - Exits 0 whether databases are fresh or stale. Exits 1 only if a database is missing, because
   the scan can't run without it.
@@ -209,7 +209,7 @@ registry. `REPORTS_DIR` defaults to `./reports`.
 
 | Setting | Used by | Default |
 |---|---|---|
-| `TRIVY_IMAGE_REF`, `GRYPE_IMAGE_REF` | fetch | `ghcr.io/aquasecurity/trivy:latest`, `ghcr.io/anchore/grype:debug` |
+| `TRIVY_IMAGE_REF`, `GRYPE_IMAGE_REF` | fetch | `ghcr.io/aquasecurity/trivy:latest`, `ghcr.io/anchore/grype:latest` |
 | `--java-db-refresh-days N` | fetch | 0 (every fetch) |
 | `--registry PREFIX` | import | none (load only) |
 | `MAX_DB_AGE_DAYS` | check-age, scan | 7 |
@@ -272,5 +272,5 @@ Line endings: `.gitattributes` sets `*.sh text eol=lf`, because the PC checks ou
 - Disk space on the hosted runner: the Java database unpacks to several GB, and the job holds
   it in three places (fetch, connected root, disconnected root). Use the runner's larger disk
   (`/mnt`) or free space first.
-- Running as the host user works in all three images (Trivy, Grype debug, shellcheck).
+- Running as the host user works in all three images (Trivy, Grype, shellcheck).
 - The exact Trivy and Grype flags, against the versions pulled on the day of the build.

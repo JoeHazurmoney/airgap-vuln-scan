@@ -24,7 +24,7 @@ Vulnerability scanners download their databases when a scan starts.
 ```mermaid
 flowchart LR
   subgraph NET["Internet"]
-    IMG["Official images<br/>trivy:latest · grype:debug"]
+    IMG["Official images<br/>trivy:latest · grype:latest"]
     DBS["Vulnerability databases<br/>trivy-db · trivy-java-db · Grype DB"]
   end
   subgraph CON["Connected forge (e.g. GitHub, GitLab)"]
