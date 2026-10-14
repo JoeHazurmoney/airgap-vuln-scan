@@ -34,6 +34,7 @@ cp "$work/grype-db.tar.zst" "$release/db/grype-db.tar.zst"
   cat "$work/fetch.env"
 } > "$release/MANIFEST"
 
+# shellcheck disable=SC2094 # find skips SHA256SUMS, the file being written
 (cd "$release" && find . -type f ! -name SHA256SUMS | sed 's|^\./||' | LC_ALL=C sort \
   | xargs sha256sum > SHA256SUMS)
 log "Packaged $release ($(du -sh "$release" | cut -f1))"

@@ -1,6 +1,7 @@
 # Helpers for the unit tests, sourced by tests/run.sh before each test file.
 # shellcheck shell=bash disable=SC2154 # TESTS and TMP come from tests/run.sh
 
+# shellcheck disable=SC2034 # used by the test files
 SCRIPTS=$(cd "$TESTS/../scripts" && pwd)
 export PATH="$TESTS/stubs:$PATH"
 export FAKE_DOCKER_LOG=$TMP/docker.log

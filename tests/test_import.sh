@@ -10,6 +10,7 @@ release() {
 }
 
 # resum RELEASE: rewrite SHA256SUMS after a test changes a file on purpose.
+# shellcheck disable=SC2094 # find skips SHA256SUMS, the file being written
 resum() { (cd "$1" && find . -type f ! -name SHA256SUMS | sed 's|^\./||' | sort | xargs sha256sum > SHA256SUMS); }
 
 test_imports_a_release_into_current() {

@@ -10,6 +10,7 @@ files=("$@")
 failures=0
 for file in "${files[@]}"; do
   file=$(cd "$(dirname "$file")" && pwd)/$(basename "$file") # each test runs in its own directory
+  # shellcheck disable=SC2013 # test names are single words
   for t in $(sed -n 's/^\(test_[a-z0-9_]*\)().*/\1/p' "$file"); do
     TMP=$(mktemp -d)
     export TMP
