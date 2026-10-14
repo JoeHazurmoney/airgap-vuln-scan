@@ -65,7 +65,7 @@ built, never a vulnerability. That's why it can be downloaded less often than th
 Image pipelines on the connected forge then scan with it: whenever an image is pulled or
 updated, they run the age check and both scanners against the database directory.
 
-**The release.** One directory, about 1.5 GB:
+**The release.** One directory, about 1.4 GB:
 
 ```
 scanners-2026-10-14/
@@ -144,5 +144,15 @@ forge's internal registry. That needs only the internal network.
 
 ## Sizes and timing
 
-About 1.5 GB per release, two-thirds of it the Java index. Timings will be added from the CI runs
-after the build.
+Measured on a GitHub-hosted runner (ubuntu-24.04), 2026-10-14:
+
+| Step | Time | Notes |
+|---|---|---|
+| fetch | 37 s | two image pulls and about 1.3 GB of databases |
+| package | 100 s | mostly compressing the Java index again; the release is 1.4 GB |
+| import | about 100 s | mostly unpacking the Java index and installing Grype's database |
+| scan | 6 s | both scanners, one image, no network |
+
+Two-thirds of each release is Trivy's Java index. Downloading it less often
+(`--java-db-refresh-days`) saves the download, not the release size: every release still carries
+it.
