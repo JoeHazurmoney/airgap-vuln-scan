@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Stand-in for docker in the unit tests: records each call in $FAKE_DOCKER_LOG, prints what the
+# scripts read back, and succeeds. FAKE_GRYPE_BUILT is the build time `grype db status`
+# reports; unset, the status fails, as it does when no database is installed.
+printf '%s\n' "$*" >> "${FAKE_DOCKER_LOG:-/dev/null}"
+case " $* " in
+  *" db status "*)
+    [[ -n ${FAKE_GRYPE_BUILT:-} ]] || exit 1
+    printf '{\n "schemaVersion": "v6.1.10",\n "built": "%s",\n "path": "/db/grype/6/vulnerability.db"\n}\n' "$FAKE_GRYPE_BUILT" ;;
+  " save "*)
+    printf 'saved %s\n' "$2" ;;
+esac
+exit 0
