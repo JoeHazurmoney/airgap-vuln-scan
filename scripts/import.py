@@ -34,7 +34,8 @@ def verify(release):
     each that fails. Accepts text ('HASH  FILE') and binary ('HASH *FILE') lines. Returns the
     names of the files checked."""
     names, failed = set(), False
-    lines = (release / "SHA256SUMS").read_text().splitlines()
+    # Nothing has been checked yet, so bytes that aren't text become a malformed line, not a crash.
+    lines = (release / "SHA256SUMS").read_text(encoding="utf-8", errors="replace").splitlines()
     for number, line in enumerate(lines, 1):
         match = re.fullmatch(r"([0-9a-fA-F]{64}) [ *](.+)", line)
         if not match:
@@ -58,9 +59,9 @@ def verify(release):
 
 
 def extract(archive, directory):
-    """Unpacks a .tar.gz into DIRECTORY with tarfile's "data" filter, which refuses absolute
-    paths, '..', links that point outside DIRECTORY, and device files (Python 3.9.17 or later;
-    RHEL 9's 3.9 has it too)."""
+    """Unpacks a .tar.gz into DIRECTORY with tarfile's "data" filter (Python 3.9.17 or later),
+    which strips a leading '/' and refuses '..', links that point outside DIRECTORY, and device
+    files."""
     if not hasattr(tarfile, "data_filter"):
         raise lib.Fail("this Python's tarfile can't refuse unsafe paths; use 3.9.17 or later")
     try:
