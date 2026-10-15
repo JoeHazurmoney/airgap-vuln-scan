@@ -99,6 +99,16 @@ scripts/scan.sh /srv/vulndb/current my-app.tar reports
 
 The unit tests need neither Docker nor a network: `bash tests/run.sh`.
 
+The scripts are moving to Python ([ADR-0002](docs/decisions/0002-python-scripts.md)).
+`scripts/import.py` takes the same arguments as `import.sh` and does the same thing; it needs
+Python 3.9 or later and nothing else. Its unit tests run in RHEL 9's Python 3.9 and RHEL 10's
+3.12, in containers, so nothing has to be installed (PowerShell or a Linux shell):
+
+```bash
+docker run --rm -v "${PWD}:/repo:ro" -w /repo registry.access.redhat.com/ubi9/ubi:9.8 python3 -B -m unittest discover -s tests
+docker run --rm -v "${PWD}:/repo:ro" -w /repo registry.access.redhat.com/ubi10/ubi:10.2 python3 -B -m unittest discover -s tests
+```
+
 ## Gating on findings
 
 `scan.sh` reports findings and never fails on them. To fail a pipeline, run a scanner with its
