@@ -3,6 +3,8 @@
 # into a registry and a database directory, then scans with no network. Runs daily after
 # Grype's 06:00 UTC database, on pull requests, on pushes to main, and by hand. Scheduled and
 # manual runs keep the day's release as an artifact for 7 days.
+# The disconnected forge imports with scripts/import.py, the Python spike (#3), on the runner's
+# own Python.
 name: demo
 
 on:
@@ -22,6 +24,9 @@ env:
   EXAMPLE_IMAGE: tomcat:9.0.50-jdk11-openjdk-slim@sha256:0c561f02b73699d076011412ec3d95359402fcbf382cbb750d12ed51635faaf2
   SHELLCHECK_IMAGE: koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
   REGISTRY_IMAGE: registry:3@sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8
+  # RHEL 9's Python 3.9 and RHEL 10's Python 3.12, for the Python unit tests (#3).
+  UBI9_IMAGE: registry.access.redhat.com/ubi9/ubi:9.8@sha256:16e9e43d99e181463513cc84a514859b1abb9460f1c4d9e208da4b4e51cd5cc3
+  UBI10_IMAGE: registry.access.redhat.com/ubi10/ubi:10.2@sha256:a75ad754aa048d808dd3260243452f8c9a665831d0493b4c9d92f0c88fe2f8c3
   W: /mnt/airgap # the runner's larger disk: the Java index unpacks to several GB, three times
 
 jobs:
@@ -33,6 +38,13 @@ jobs:
 
       - name: Unit tests
         run: bash tests/run.sh
+
+      - name: Python unit tests on Python 3.9 and 3.12
+        run: |
+          for image in "$UBI9_IMAGE" "$UBI10_IMAGE"; do
+            docker run --rm -v "$PWD:/repo:ro" -w /repo "$image" sh -c \
+              'python3 --version && python3 -B -m unittest discover -s tests'
+          done
 
       - name: shellcheck
         run: >-
@@ -78,8 +90,10 @@ jobs:
       - name: "Disconnected: a registry to load into"
         run: docker run -d --name registry -p 5000:5000 "$REGISTRY_IMAGE"
 
-      - name: "Disconnected: import"
-        run: scripts/import.sh "$RELEASE" "$W/disconnected" --registry localhost:5000/scanners
+      - name: "Disconnected: import (Python)"
+        run: |
+          python3 --version
+          scripts/import.py "$RELEASE" "$W/disconnected" --registry localhost:5000/scanners
 
       - name: "Disconnected: the scan containers have no network"
         run: |
@@ -105,13 +119,13 @@ jobs:
             grep -q "^WARNING: $db is " "$W/scan-stale.log" || { echo "::error::no warning for $db"; exit 1; }
           done
 
-      - name: "Disconnected: a changed file is refused"
+      - name: "Disconnected: a changed file is refused (Python)"
         run: |
           cp -al "$RELEASE" "$W/tampered"
           cp --remove-destination "$RELEASE/db/grype-db.tar.zst" "$W/tampered/db/grype-db.tar.zst"
           printf 'x' | dd of="$W/tampered/db/grype-db.tar.zst" bs=1 seek=1000 conv=notrunc status=none
           before=$(cat "$W/disconnected/current/MANIFEST")
-          if scripts/import.sh "$W/tampered" "$W/disconnected" > "$W/tamper.log" 2>&1; then
+          if scripts/import.py "$W/tampered" "$W/disconnected" > "$W/tamper.log" 2>&1; then
             cat "$W/tamper.log"
             echo "::error::a changed release was imported"
             exit 1
